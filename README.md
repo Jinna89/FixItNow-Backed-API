@@ -21,10 +21,7 @@ npm install
 ```
 
 ### 2. Configure environment
-Copy `.env.example` to `.env` and fill in your values:
-```bash
-cp .env.example .env
-```
+
 At minimum, set `DATABASE_URL` to a running PostgreSQL instance, and generate
 strong random values for `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET`
 (e.g. `openssl rand -hex 32`).
