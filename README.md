@@ -46,6 +46,97 @@ npm start       # production
 ```
 The API will be available at `http://localhost:5050`.
 
+## Vercel Deployment
+
+This repository is configured for Vercel with:
+
+- `api/index.ts` — Vercel serverless entry point that exports the Express app
+- `vercel.json` — routes all requests to the API function
+- `npm run vercel-build` — generates Prisma Client and compiles TypeScript
+- `.env.example` — complete list of required deployment variables
+
+### 1. Push the repository
+
+Commit and push the project to GitHub, GitLab, or Bitbucket.
+
+### 2. Import on Vercel
+
+In Vercel, create a new project from the repository. Keep the project settings
+simple:
+
+| Setting | Value |
+|---|---|
+| Framework Preset | Other |
+| Build Command | `npm run vercel-build` |
+| Output Directory | Leave empty |
+| Install Command | `npm install` |
+
+The committed `vercel.json` already provides the build command and rewrite
+rules, so Vercel should detect those automatically.
+
+### 3. Add environment variables
+
+Add these values in **Project Settings → Environment Variables**:
+
+```bash
+NODE_ENV=production
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
+CLIENT_URL="https://your-frontend-domain.com"
+JWT_ACCESS_SECRET="strong-random-secret"
+JWT_REFRESH_SECRET="another-strong-random-secret"
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+SSLCOMMERZ_IS_LIVE=false
+SSLCOMMERZ_STORE_ID="your-store-id"
+SSLCOMMERZ_STORE_PASSWORD="your-store-password"
+SSLCOMMERZ_SUCCESS_URL="https://your-api.vercel.app/api/payments/confirm"
+SSLCOMMERZ_FAIL_URL="https://your-api.vercel.app/api/payments/confirm"
+SSLCOMMERZ_CANCEL_URL="https://your-api.vercel.app/api/payments/confirm"
+SSLCOMMERZ_IPN_URL="https://your-api.vercel.app/api/payments/confirm"
+ADMIN_NAME="FixItNow Admin"
+ADMIN_EMAIL="admin@fixitnow.com"
+ADMIN_PASSWORD="change-this-before-production"
+```
+
+Use a hosted PostgreSQL database such as Vercel Postgres, Neon, Supabase,
+Railway, or Render. Do not use a local database URL for Vercel.
+
+### 4. Deploy database migrations
+
+Run migrations against the production database before using the API:
+
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public" npm run prisma:deploy
+```
+
+If you want the default admin and categories in production, run the seed after
+migrations with the same production `DATABASE_URL`.
+
+### 5. Deploy
+
+Deploy from the Vercel dashboard or with the CLI:
+
+```bash
+npx vercel
+npx vercel --prod
+```
+
+After deployment, test:
+
+```bash
+curl https://your-api.vercel.app/
+curl https://your-api.vercel.app/api/categories
+```
+
+### Vercel notes
+
+- Vercel runs this Express app as a serverless function, so do not store files
+  on local disk or keep in-memory state.
+- Keep PostgreSQL external and reachable from Vercel.
+- Update the SSLCommerz callback URLs after your final Vercel domain is known.
+- For protected frontend requests, set `CLIENT_URL` to the deployed frontend
+  domain instead of `*`.
+
 ## Admin Credentials (mandatory requirement)
 
 The seed script creates a working admin account from your `.env` values:
